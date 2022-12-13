@@ -30,9 +30,11 @@ class Sender : public cSimpleModule
 {
 public:
     std::vector<std::pair<int, std::string>> msgs;
+    std::vector<bool> acks;
     char * framing(std::string msg, char flag, char escape);
     char addParity(char * frame);
     void readFile(std::string filename);
+    int applyShift(std::vector<bool>& ack);
   protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
