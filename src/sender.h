@@ -17,7 +17,7 @@
 #define __PROJECT_SENDER_H_
 
 #include <omnetpp.h>
-#include<bitset>
+#include <bitset>
 
 using namespace omnetpp;
 

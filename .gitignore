@@ -1,0 +1,5 @@
+
+out/clang-debug/src/sender.o
+src/Makefile
+src/project_dbg.exe
+out/clang-debug/src/project_dbg.exe
