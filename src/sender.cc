@@ -24,6 +24,7 @@ void Sender::initialize()
     EV<<"Begin sender"<<endl;
     cMessage * msgc= new cMessage("Sned 1st msg ..");
     send(msgc, "portOut");
+    readFile("input0.txt");
 }
 
 void Sender::handleMessage(cMessage *msg) //msg is ack/nack
@@ -38,11 +39,11 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
     int i =0;
 
     //message = seq_number + frame + parity + frameType ack_expected
-    while(i<5){
+    while(i< msgs.size()){
 
         // prepare the message
         CustomizedMsg_Base * sendMsg = new CustomizedMsg_Base("Send msg .."); //this the msg->getName() at receiver
-        char * msgContent = framing("1",'$','/'); //get it from the file
+        char * msgContent = framing(msgs[i].second,'$','/'); //get it from the file
         char msgParity = addParity(msgContent);
         sendMsg->setMsg_payload(msgContent);
         sendMsg->setSeq_num(next_frame_to_send);
@@ -50,14 +51,14 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
         sendMsg->setMycheckbits(msgParity);
 
         // print data
-        std::string thePayload;
+        std::string thePayload = msgContent;
         int modified = -1; //modified number is not random, don't modify in flag
         std::string loss = "No";
         int duplicate =0;
         int delay = 0;
         std::bitset<8> parity(msgParity);
         double time = 0;
-        int property=0; //get it from the file
+        int property=msgs[i].first; //get it from the file
 
         switch (property)
         {
@@ -112,6 +113,7 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
             thePayload = sendMsg->getMsg_payload();
             thePayload[1]+=5;
             sendMsg->setMsg_payload(thePayload.c_str());
+            printf("%s", thePayload.c_str());
             time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD");
             break;
         case 11: //modify and duplicate and delay
@@ -140,7 +142,7 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
         EV<<"At time: "<<time
                 <<" Node: "<<0 //it's sender //need to be changed
                 <<" sent frame with seq_num= "<<next_frame_to_send
-                <<" and payload= "<<msgContent
+                <<" and payload= "<< thePayload
                 <<" and trailer= "<<parity
                 <<", Modified bit number " << modified//not handled yet
                 <<", Lost " <<loss //not handled yet
@@ -156,11 +158,11 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
         if (property == 2 or property == 3 or property == 10 or property == 11) //duplication
         {
             duplicate = 2;
-            time += (int)getParentModule()->par("DD");
+            time += (double)getParentModule()->par("DD");
             EV<<"At time: "<<time
                             <<" Node: "<<0 //it's sender //need to be changed
                             <<" sent frame with seq_num= "<<next_frame_to_send
-                            <<" and payload= "<<msgContent
+                            <<" and payload= "<<thePayload
                             <<" and trailer= "<<parity
                             <<", Modified bit number " << modified//not handled yet
                             <<", Lost " <<loss  //not handled yet
@@ -228,6 +230,26 @@ char Sender::addParity(char * frame)
         parity^=charBits; //xor all characters to get the parity
     }
     return (char)parity.to_ulong(); //convert the parity bits to be 1 char
+}
+
+void Sender::readFile(std::string filename)
+{
+    std::ifstream input(filename);
+      std::string errors_str, msg, line;
+      while (input)
+      {
+        getline(input, line);
+        if (line.size() >= 4)
+        {
+          errors_str = line.substr(0, 4);
+          std::bitset<4> errors_bin(errors_str);
+          int errors = errors_bin.to_ullong();
+          msg = "";
+          if (line.size() >= 6)
+            msg = line.substr(5, line.size() - 5);
+          msgs.push_back(std::make_pair(errors, msg));
+        }
+      }
 }
 
 

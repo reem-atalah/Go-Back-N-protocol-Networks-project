@@ -18,6 +18,8 @@
 
 #include <omnetpp.h>
 #include <bitset>
+#include <vector>
+#include <fstream>
 
 using namespace omnetpp;
 
@@ -27,11 +29,14 @@ using namespace omnetpp;
 class Sender : public cSimpleModule
 {
 public:
+    std::vector<std::pair<int, std::string>> msgs;
     char * framing(std::string msg, char flag, char escape);
     char addParity(char * frame);
+    void readFile(std::string filename);
   protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
+
 
 };
 
