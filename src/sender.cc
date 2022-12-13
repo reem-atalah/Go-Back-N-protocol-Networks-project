@@ -30,53 +30,165 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
 {
     // TODO - Generated method body
     //wait for ack or timeout
-    //send the message
+    //send the message with time
     //seq_number is next_frame_to_send
-//    int ack_expected = 0;
-    int next_frame_to_send = 1;
+    int ack_expected = 0;
+    int next_frame_to_send = 0;
 
     int i =0;
 
     //message = seq_number + frame + parity + frameType ack_expected
-    while(i<10){
+    while(i<5){
 
         // prepare the message
-        CustomizedMsg_Base * sendMsg = new CustomizedMsg_Base("Send msg ..");
-        char * msgContent = framing("msg payload",'$','/'); //should get this from the file
+        CustomizedMsg_Base * sendMsg = new CustomizedMsg_Base("Send msg .."); //this the msg->getName() at receiver
+        char * msgContent = framing("1",'$','/'); //get it from the file
         char msgParity = addParity(msgContent);
         sendMsg->setMsg_payload(msgContent);
         sendMsg->setSeq_num(next_frame_to_send);
         sendMsg->setFrame_type(0); // sender always send data only
         sendMsg->setMycheckbits(msgParity);
 
-
         // print data
+        std::string thePayload;
+        int modified = -1; //modified number is not random, don't modify in flag
+        std::string loss = "No";
+        int duplicate =0;
+        int delay = 0;
         std::bitset<8> parity(msgParity);
         double time = 0;
-        // add processing delay PT(0.5) and transmission delay TD(1) in case no delay, no duplication
-        time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD");
+        int property=0; //get it from the file
 
-        // add processing delay PT(0.5) and transmission delay TD(1) and Error delay ED(4) in case of delay
-        time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD")+(int)getParentModule()->par("ED");
+        switch (property)
+        {
+        case 0: //no err
+            // add processing delay PT(0.5) and transmission delay TD(1) in case no delay, no duplication
+            time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD");
+            break;
+        case 1: //delay
+            // add processing delay PT(0.5) and transmission delay TD(1) and Error delay ED(4) in case of delay
+            time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD")+(int)getParentModule()->par("ED");
+            delay = (int)getParentModule()->par("ED") ; // not sure ?????????????
+            break;
+        case 2: //duplication
+            duplicate = 1;
+            //put the first time, same as case 0
+            time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD");
+        case 3: //delay and duplication, apply now the delay only
+            duplicate = 1;
+            time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD")+(int)getParentModule()->par("ED");
+            delay = (int)getParentModule()->par("ED") ; // not sure ?????????????
+            break;
+        case 4: //loss
+            loss = "Yes";
+            break;
+        case 5:
+            loss = "Yes";
+            break;
+        case 6:
+            loss = "Yes";
+            break;
+        case 7:
+            loss = "Yes";
+            break;
+        case 8: //modify ,normal time
+            modified = 1; //modify first bit in msg not in flag
+            thePayload = sendMsg->getMsg_payload();
+            thePayload[1]+=5;
+            sendMsg->setMsg_payload(thePayload.c_str());
+            time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD");
+            break;
+        case 9: //modify and delay
+            modified = 1;
+            thePayload = sendMsg->getMsg_payload();
+            thePayload[1]+=5;
+            sendMsg->setMsg_payload(thePayload.c_str());
+            time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD")+(int)getParentModule()->par("ED");
+            delay = (int)getParentModule()->par("ED") ; // not sure ?????????????
+            break;
+        case 10: //modify and duplicate, normal time
+            duplicate = 1;
+            modified = 1;
+            thePayload = sendMsg->getMsg_payload();
+            thePayload[1]+=5;
+            sendMsg->setMsg_payload(thePayload.c_str());
+            time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD");
+            break;
+        case 11: //modify and duplicate and delay
+            duplicate = 1;
+            modified = 1;
+            thePayload = sendMsg->getMsg_payload();
+            thePayload[1]+=5;
+            sendMsg->setMsg_payload(thePayload.c_str());
+            time = (double)getParentModule()->par("PT")+(int)getParentModule()->par("TD")+(int)getParentModule()->par("ED");
+            delay = (int)getParentModule()->par("ED") ; // not sure ?????????????
+            break;
+        case 12: //loss
+            loss = "Yes";
+            break;
+        case 13: //loss
+            loss = "Yes";
+            break;
+        case 14: //loss
+            loss = "Yes";
+            break;
+        case 15: //loss
+            loss = "Yes";
+            break;
+        }
 
         EV<<"At time: "<<time
-                <<" Node: "<<0 //it's sender
+                <<" Node: "<<0 //it's sender //need to be changed
                 <<" sent frame with seq_num= "<<next_frame_to_send
                 <<" and payload= "<<msgContent
                 <<" and trailer= "<<parity
-                <<", Modified bit number " //not handled yet
-                <<", Lost " //not handled yet
-                <<", Duplicate " //not handled yet
-                <<", Delay "
+                <<", Modified bit number " << modified//not handled yet
+                <<", Lost " <<loss //not handled yet
+                <<", Duplicate "<<duplicate  //not handled yet
+                <<", Delay " << delay //not handled yet
                 <<endl;
 
-        // send the message
-        send(sendMsg, "portOut");
+        // send the message with a delay (even if there is no delay, put the time of sending msg PT+TD)
+        if(time != 0) //time =0 : loss
+        {
+            sendDelayed(sendMsg,time, "portOut");
+        }
+        if (property == 2 or property == 3 or property == 10 or property == 11) //duplication
+        {
+            duplicate = 2;
+            time += (int)getParentModule()->par("DD");
+            EV<<"At time: "<<time
+                            <<" Node: "<<0 //it's sender //need to be changed
+                            <<" sent frame with seq_num= "<<next_frame_to_send
+                            <<" and payload= "<<msgContent
+                            <<" and trailer= "<<parity
+                            <<", Modified bit number " << modified//not handled yet
+                            <<", Lost " <<loss  //not handled yet
+                            <<", Duplicate "<<duplicate  //not handled yet
+                            <<", Delay "<< delay //not handled yet
+                            <<endl;
+            sendDelayed(sendMsg,time, "portOut");
+        }
 
+        //circular increment
         next_frame_to_send++;
         next_frame_to_send%= (int)getParentModule()->par("WS");
 
         i++;
+
+        //to read the ack:
+        //convert 'msg' to be CustomizedMsg_Base
+        CustomizedMsg_Base * receivedMsg = check_and_cast<CustomizedMsg_Base *>(msg);
+
+        //check if the ack as expected
+        //ack: then shift the window
+        if (ack_expected == receivedMsg->getN_ack_value())
+        {
+            //circular increment
+            ack_expected++;
+            ack_expected%= (int)getParentModule()->par("WS");
+
+        }
     }
 
     // 1st msg: in case of duplication, add processing delay PT(0.5) and transmission delay TD(1)
@@ -87,27 +199,22 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
 
 char * Sender::framing(std::string msg, char flag, char escape)
 {
-//    char * updated_msg;
-    char* updated_msg = new char[msg.size()*2];
-//    char * updated_msg[msg.size()*2];
-//    char *updated_msg = (char*)malloc(msg.size()*2*sizeof(char));
-    //    add flag at the beginning of the msg
+    char* updated_msg = new char[3+msg.size()*2];
     updated_msg[0] = flag;
-    printf(updated_msg);
     int j=1;
-    for(int i = 0; i<msg.size(); i++) { //get character at position i // or msg.size()
+    for(int i = 0; i<msg.size(); i++) { //get character at position i
           if( msg.at(i) == flag or msg.at(i) == escape)
           {
               updated_msg[j]=escape;
               j++;
           }
-          updated_msg[i]=msg.at(i);
-          printf(updated_msg);
+          updated_msg[j]=msg.at(i);
           j++;
      }
 //    add flag at the end of the msg
     updated_msg[j] = flag;
-    printf(updated_msg);
+    j++;
+    updated_msg[j] = '\0';
     return updated_msg;
 }
 
