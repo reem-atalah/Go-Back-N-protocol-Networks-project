@@ -22,7 +22,7 @@ void Hub::initialize()
 {
     // TODO - Generated method body
 //    getParentModule()->par("n");
-    cMessage * msgc= new cMessage("Hello from Hub");
+    CustomizedMsg_Base * msgc= new CustomizedMsg_Base("Hello from Hub");
     EV<<"Begin hub"<<endl;
     send(msgc, "portOut");
 }
@@ -31,11 +31,11 @@ void Hub::handleMessage(cMessage *msg)
 {
     // TODO - Generated method body
 
-//    CustomizedMsg_Base * receivedMsg = check_and_cast<CustomizedMsg_Base *>(msg);
-//        EV<<"received: seq_num: "<<receivedMsg->getSeq_num()
-//                <<" payload: "<<receivedMsg->getMsg_payload()
-//                <<" parity: "<< receivedMsg->getMycheckbits();
-//        send(receivedMsg, "out");
+    CustomizedMsg_Base * receivedMsg = check_and_cast<CustomizedMsg_Base *>(msg);
+        EV<<"received: seq_num: "<<receivedMsg->getSeq_num()
+                <<" payload: "<<receivedMsg->getMsg_payload()
+                <<" parity: "<< receivedMsg->getMycheckbits();
+        send(receivedMsg, "portOut");
     EV<<msg->getName()<<endl;
-     cancelAndDelete(msg);
+//     cancelAndDelete(msg);
 }

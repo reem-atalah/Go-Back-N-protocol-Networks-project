@@ -72,7 +72,7 @@ class CustomizedMsg_Base : public ::omnetpp::cPacket
   private:
     void copy(const CustomizedMsg_Base& other);
 
-  protected:
+  public:
     bool operator==(const CustomizedMsg_Base&) = delete;
     // make constructors protected to avoid instantiation
 
@@ -80,7 +80,6 @@ class CustomizedMsg_Base : public ::omnetpp::cPacket
     // make assignment operator protected to force the user override it
     CustomizedMsg_Base& operator=(const CustomizedMsg_Base& other);
 
-  public:
     virtual ~CustomizedMsg_Base();
     CustomizedMsg_Base(const char *name=nullptr, short kind=0);
     virtual CustomizedMsg_Base *dup() const override {
