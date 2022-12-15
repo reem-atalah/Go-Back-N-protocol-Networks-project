@@ -3,3 +3,15 @@ out/clang-debug/src/sender.o
 src/Makefile
 src/project_dbg.exe
 out/clang-debug/src/project_dbg.exe
+.settings/language.settings.xml
+out/clang-debug/src/customizedMsg_m.o
+out/clang-debug/src/Hub.o
+out/clang-debug/src/project_dbg.exe
+out/clang-debug/src/sender.o
+out/clang-release/src/Hub.o
+out/clang-release/src/project.exe
+out/clang-release/src/sender.o
+src/Makefile
+src/project.exe
+src/project_dbg.exe
+src/results/General-\#0.sca
