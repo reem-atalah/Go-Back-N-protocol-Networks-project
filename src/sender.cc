@@ -32,6 +32,11 @@ void Sender::initialize()
     Sl = (int)getParentModule()->par("WS");
     scheduleAt(simTime() + (double)getParentModule()->par("PT"),
                     new cMessage(("S" + std::to_string(0)).c_str()));
+    int property = msgs[0].first;
+    if (property == 2 or property == 3 or property == 10 or property == 11)
+                        scheduleAt(simTime() + (double)getParentModule()->par("PT")
+                        + (double)getParentModule()->par("DD"),
+                        new cMessage(("D" + std::to_string(0)).c_str()));
 }
 
 void Sender::handleMessage(cMessage *msg) //msg is ack/nack
@@ -63,7 +68,8 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
             std::bitset<8> parity(msgParity);
             double time = 0;
             // Include The "T" condition ?
-            int property= (msg->getName()[0] == 'S')? msgs[Sn].first: 0; //get it from the file
+            char tag = msg->getName()[0];
+            int property= (tag != 'T')? msgs[Sn].first: 0; //get it from the file
 
             switch (property)
             {
@@ -144,9 +150,11 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
                 break;
             }
 
+            // TODO: make it time + simtime()
             EV<<"At time: "<<time
                                 <<" Node: "<<0 //it's sender //need to be changed
                                 <<" sent frame with seq_num= "<<Sn
+                                << "property" << property
                                 <<" and payload= "<< thePayload
                                 <<" and trailer= "<<parity
                                 <<", Modified bit number " << modified
@@ -154,23 +162,25 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
                                 <<", Duplicate "<<duplicate  //not handled yet
                                 <<", Delay " << delay
                                 <<endl;
-            sendDelayed(sendMsg,time, "portOut");
+            if (time > 0.001)
+                sendDelayed(sendMsg,time, "portOut");
 
             // take out of condition??
-            if (Sn + 1 < Sl && Sn + 1 < msgs.size())
+            if (Sn + 1 < Sl && Sn + 1 < msgs.size() && tag != 'D')
             {
                 scheduleAt(simTime() + (double)getParentModule()->par("PT"),
                 new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
 
+                property = msgs[Sn + 1].first;
                 if (property == 2 or property == 3 or property == 10 or property == 11)
                     scheduleAt(simTime() + (double)getParentModule()->par("PT")
                     + (double)getParentModule()->par("DD"),
                     new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
 
-                scheduleAt(simTime() + (double)getParentModule()->par("PT")
-                + (int)getParentModule()->par("TO"),
-                new cMessage(("T" + std::to_string(Sn + 1)).c_str()));
             }
+            scheduleAt(simTime() + (double)getParentModule()->par("PT")
+            + (int)getParentModule()->par("TO"),
+            new cMessage(("T" + std::to_string(Sn)).c_str()));
         }
 
     }
