@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by opp_msgtool 6.0 from customizedMsg.msg.
+// Generated file, do not edit! Created by nedtool 5.6 from customizedMsg.msg.
 //
 
 // Disable warnings about unused variables, empty switch stmts, etc:
@@ -26,8 +26,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <memory>
-#include <type_traits>
 #include "customizedMsg_m.h"
 
 namespace omnetpp {
@@ -69,7 +67,7 @@ void doParsimUnpacking(omnetpp::cCommBuffer *buffer, std::list<T,A>& l)
 {
     int n;
     doParsimUnpacking(buffer, n);
-    for (int i = 0; i < n; i++) {
+    for (int i=0; i<n; i++) {
         l.push_back(T());
         doParsimUnpacking(buffer, l.back());
     }
@@ -89,7 +87,7 @@ void doParsimUnpacking(omnetpp::cCommBuffer *buffer, std::set<T,Tr,A>& s)
 {
     int n;
     doParsimUnpacking(buffer, n);
-    for (int i = 0; i < n; i++) {
+    for (int i=0; i<n; i++) {
         T x;
         doParsimUnpacking(buffer, x);
         s.insert(x);
@@ -112,7 +110,7 @@ void doParsimUnpacking(omnetpp::cCommBuffer *buffer, std::map<K,V,Tr,A>& m)
 {
     int n;
     doParsimUnpacking(buffer, n);
-    for (int i = 0; i < n; i++) {
+    for (int i=0; i<n; i++) {
         K k; V v;
         doParsimUnpacking(buffer, k);
         doParsimUnpacking(buffer, v);
@@ -150,8 +148,41 @@ void doParsimUnpacking(omnetpp::cCommBuffer *, T& t)
 
 }  // namespace omnetpp
 
-CustomizedMsg_Base::CustomizedMsg_Base(const char *name, short kind) : ::omnetpp::cPacket(name, kind)
+
+// forward
+template<typename T, typename A>
+std::ostream& operator<<(std::ostream& out, const std::vector<T,A>& vec);
+
+// Template rule which fires if a struct or class doesn't have operator<<
+template<typename T>
+inline std::ostream& operator<<(std::ostream& out,const T&) {return out;}
+
+// operator<< for std::vector<T>
+template<typename T, typename A>
+inline std::ostream& operator<<(std::ostream& out, const std::vector<T,A>& vec)
 {
+    out.put('{');
+    for(typename std::vector<T,A>::const_iterator it = vec.begin(); it != vec.end(); ++it)
+    {
+        if (it != vec.begin()) {
+            out.put(','); out.put(' ');
+        }
+        out << *it;
+    }
+    out.put('}');
+    
+    char buf[32];
+    sprintf(buf, " (size=%u)", (unsigned int)vec.size());
+    out.write(buf, strlen(buf));
+    return out;
+}
+
+CustomizedMsg_Base::CustomizedMsg_Base(const char *name, short kind) : ::omnetpp::cPacket(name,kind)
+{
+    this->seq_num = 0;
+    this->frame_type = 0;
+    this->n_ack_value = 0;
+    this->mycheckbits = 0;
 }
 
 CustomizedMsg_Base::CustomizedMsg_Base(const CustomizedMsg_Base& other) : ::omnetpp::cPacket(other)
@@ -165,7 +196,7 @@ CustomizedMsg_Base::~CustomizedMsg_Base()
 
 CustomizedMsg_Base& CustomizedMsg_Base::operator=(const CustomizedMsg_Base& other)
 {
-    if (this == &other) return *this;
+    if (this==&other) return *this;
     ::omnetpp::cPacket::operator=(other);
     copy(other);
     return *this;
@@ -253,52 +284,41 @@ void CustomizedMsg_Base::setMycheckbits(char mycheckbits)
 class CustomizedMsgDescriptor : public omnetpp::cClassDescriptor
 {
   private:
-    mutable const char **propertyNames;
-    enum FieldConstants {
-        FIELD_seq_num,
-        FIELD_frame_type,
-        FIELD_msg_payload,
-        FIELD_n_ack_value,
-        FIELD_mycheckbits,
-    };
+    mutable const char **propertynames;
   public:
     CustomizedMsgDescriptor();
     virtual ~CustomizedMsgDescriptor();
 
     virtual bool doesSupport(omnetpp::cObject *obj) const override;
     virtual const char **getPropertyNames() const override;
-    virtual const char *getProperty(const char *propertyName) const override;
+    virtual const char *getProperty(const char *propertyname) const override;
     virtual int getFieldCount() const override;
     virtual const char *getFieldName(int field) const override;
     virtual int findField(const char *fieldName) const override;
     virtual unsigned int getFieldTypeFlags(int field) const override;
     virtual const char *getFieldTypeString(int field) const override;
     virtual const char **getFieldPropertyNames(int field) const override;
-    virtual const char *getFieldProperty(int field, const char *propertyName) const override;
-    virtual int getFieldArraySize(omnetpp::any_ptr object, int field) const override;
-    virtual void setFieldArraySize(omnetpp::any_ptr object, int field, int size) const override;
+    virtual const char *getFieldProperty(int field, const char *propertyname) const override;
+    virtual int getFieldArraySize(void *object, int field) const override;
 
-    virtual const char *getFieldDynamicTypeString(omnetpp::any_ptr object, int field, int i) const override;
-    virtual std::string getFieldValueAsString(omnetpp::any_ptr object, int field, int i) const override;
-    virtual void setFieldValueAsString(omnetpp::any_ptr object, int field, int i, const char *value) const override;
-    virtual omnetpp::cValue getFieldValue(omnetpp::any_ptr object, int field, int i) const override;
-    virtual void setFieldValue(omnetpp::any_ptr object, int field, int i, const omnetpp::cValue& value) const override;
+    virtual const char *getFieldDynamicTypeString(void *object, int field, int i) const override;
+    virtual std::string getFieldValueAsString(void *object, int field, int i) const override;
+    virtual bool setFieldValueAsString(void *object, int field, int i, const char *value) const override;
 
     virtual const char *getFieldStructName(int field) const override;
-    virtual omnetpp::any_ptr getFieldStructValuePointer(omnetpp::any_ptr object, int field, int i) const override;
-    virtual void setFieldStructValuePointer(omnetpp::any_ptr object, int field, int i, omnetpp::any_ptr ptr) const override;
+    virtual void *getFieldStructValuePointer(void *object, int field, int i) const override;
 };
 
 Register_ClassDescriptor(CustomizedMsgDescriptor)
 
 CustomizedMsgDescriptor::CustomizedMsgDescriptor() : omnetpp::cClassDescriptor("CustomizedMsg", "omnetpp::cPacket")
 {
-    propertyNames = nullptr;
+    propertynames = nullptr;
 }
 
 CustomizedMsgDescriptor::~CustomizedMsgDescriptor()
 {
-    delete[] propertyNames;
+    delete[] propertynames;
 }
 
 bool CustomizedMsgDescriptor::doesSupport(omnetpp::cObject *obj) const
@@ -308,53 +328,53 @@ bool CustomizedMsgDescriptor::doesSupport(omnetpp::cObject *obj) const
 
 const char **CustomizedMsgDescriptor::getPropertyNames() const
 {
-    if (!propertyNames) {
+    if (!propertynames) {
         static const char *names[] = { "customize",  nullptr };
-        omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-        const char **baseNames = base ? base->getPropertyNames() : nullptr;
-        propertyNames = mergeLists(baseNames, names);
+        omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+        const char **basenames = basedesc ? basedesc->getPropertyNames() : nullptr;
+        propertynames = mergeLists(basenames, names);
     }
-    return propertyNames;
+    return propertynames;
 }
 
-const char *CustomizedMsgDescriptor::getProperty(const char *propertyName) const
+const char *CustomizedMsgDescriptor::getProperty(const char *propertyname) const
 {
-    if (!strcmp(propertyName, "customize")) return "true";
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    return base ? base->getProperty(propertyName) : nullptr;
+    if (!strcmp(propertyname,"customize")) return "true";
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    return basedesc ? basedesc->getProperty(propertyname) : nullptr;
 }
 
 int CustomizedMsgDescriptor::getFieldCount() const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    return base ? 5+base->getFieldCount() : 5;
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    return basedesc ? 5+basedesc->getFieldCount() : 5;
 }
 
 unsigned int CustomizedMsgDescriptor::getFieldTypeFlags(int field) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldTypeFlags(field);
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldTypeFlags(field);
+        field -= basedesc->getFieldCount();
     }
     static unsigned int fieldTypeFlags[] = {
-        FD_ISEDITABLE,    // FIELD_seq_num
-        FD_ISEDITABLE,    // FIELD_frame_type
-        FD_ISEDITABLE,    // FIELD_msg_payload
-        FD_ISEDITABLE,    // FIELD_n_ack_value
-        FD_ISEDITABLE,    // FIELD_mycheckbits
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field >= 0 && field < 5) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<5) ? fieldTypeFlags[field] : 0;
 }
 
 const char *CustomizedMsgDescriptor::getFieldName(int field) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldName(field);
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldName(field);
+        field -= basedesc->getFieldCount();
     }
     static const char *fieldNames[] = {
         "seq_num",
@@ -363,233 +383,156 @@ const char *CustomizedMsgDescriptor::getFieldName(int field) const
         "n_ack_value",
         "mycheckbits",
     };
-    return (field >= 0 && field < 5) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<5) ? fieldNames[field] : nullptr;
 }
 
 int CustomizedMsgDescriptor::findField(const char *fieldName) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    int baseIndex = base ? base->getFieldCount() : 0;
-    if (strcmp(fieldName, "seq_num") == 0) return baseIndex + 0;
-    if (strcmp(fieldName, "frame_type") == 0) return baseIndex + 1;
-    if (strcmp(fieldName, "msg_payload") == 0) return baseIndex + 2;
-    if (strcmp(fieldName, "n_ack_value") == 0) return baseIndex + 3;
-    if (strcmp(fieldName, "mycheckbits") == 0) return baseIndex + 4;
-    return base ? base->findField(fieldName) : -1;
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    int base = basedesc ? basedesc->getFieldCount() : 0;
+    if (fieldName[0]=='s' && strcmp(fieldName, "seq_num")==0) return base+0;
+    if (fieldName[0]=='f' && strcmp(fieldName, "frame_type")==0) return base+1;
+    if (fieldName[0]=='m' && strcmp(fieldName, "msg_payload")==0) return base+2;
+    if (fieldName[0]=='n' && strcmp(fieldName, "n_ack_value")==0) return base+3;
+    if (fieldName[0]=='m' && strcmp(fieldName, "mycheckbits")==0) return base+4;
+    return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
 const char *CustomizedMsgDescriptor::getFieldTypeString(int field) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldTypeString(field);
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldTypeString(field);
+        field -= basedesc->getFieldCount();
     }
     static const char *fieldTypeStrings[] = {
-        "int",    // FIELD_seq_num
-        "int",    // FIELD_frame_type
-        "string",    // FIELD_msg_payload
-        "int",    // FIELD_n_ack_value
-        "char",    // FIELD_mycheckbits
+        "int",
+        "int",
+        "string",
+        "int",
+        "char",
     };
-    return (field >= 0 && field < 5) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<5) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **CustomizedMsgDescriptor::getFieldPropertyNames(int field) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldPropertyNames(field);
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldPropertyNames(field);
+        field -= basedesc->getFieldCount();
     }
     switch (field) {
         default: return nullptr;
     }
 }
 
-const char *CustomizedMsgDescriptor::getFieldProperty(int field, const char *propertyName) const
+const char *CustomizedMsgDescriptor::getFieldProperty(int field, const char *propertyname) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldProperty(field, propertyName);
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldProperty(field, propertyname);
+        field -= basedesc->getFieldCount();
     }
     switch (field) {
         default: return nullptr;
     }
 }
 
-int CustomizedMsgDescriptor::getFieldArraySize(omnetpp::any_ptr object, int field) const
+int CustomizedMsgDescriptor::getFieldArraySize(void *object, int field) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldArraySize(object, field);
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldArraySize(object, field);
+        field -= basedesc->getFieldCount();
     }
-    CustomizedMsg_Base *pp = omnetpp::fromAnyPtr<CustomizedMsg_Base>(object); (void)pp;
+    CustomizedMsg_Base *pp = (CustomizedMsg_Base *)object; (void)pp;
     switch (field) {
         default: return 0;
     }
 }
 
-void CustomizedMsgDescriptor::setFieldArraySize(omnetpp::any_ptr object, int field, int size) const
+const char *CustomizedMsgDescriptor::getFieldDynamicTypeString(void *object, int field, int i) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount()){
-            base->setFieldArraySize(object, field, size);
-            return;
-        }
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldDynamicTypeString(object,field,i);
+        field -= basedesc->getFieldCount();
     }
-    CustomizedMsg_Base *pp = omnetpp::fromAnyPtr<CustomizedMsg_Base>(object); (void)pp;
-    switch (field) {
-        default: throw omnetpp::cRuntimeError("Cannot set array size of field %d of class 'CustomizedMsg_Base'", field);
-    }
-}
-
-const char *CustomizedMsgDescriptor::getFieldDynamicTypeString(omnetpp::any_ptr object, int field, int i) const
-{
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldDynamicTypeString(object,field,i);
-        field -= base->getFieldCount();
-    }
-    CustomizedMsg_Base *pp = omnetpp::fromAnyPtr<CustomizedMsg_Base>(object); (void)pp;
+    CustomizedMsg_Base *pp = (CustomizedMsg_Base *)object; (void)pp;
     switch (field) {
         default: return nullptr;
     }
 }
 
-std::string CustomizedMsgDescriptor::getFieldValueAsString(omnetpp::any_ptr object, int field, int i) const
+std::string CustomizedMsgDescriptor::getFieldValueAsString(void *object, int field, int i) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldValueAsString(object,field,i);
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldValueAsString(object,field,i);
+        field -= basedesc->getFieldCount();
     }
-    CustomizedMsg_Base *pp = omnetpp::fromAnyPtr<CustomizedMsg_Base>(object); (void)pp;
+    CustomizedMsg_Base *pp = (CustomizedMsg_Base *)object; (void)pp;
     switch (field) {
-        case FIELD_seq_num: return long2string(pp->getSeq_num());
-        case FIELD_frame_type: return long2string(pp->getFrame_type());
-        case FIELD_msg_payload: return oppstring2string(pp->getMsg_payload());
-        case FIELD_n_ack_value: return long2string(pp->getN_ack_value());
-        case FIELD_mycheckbits: return long2string(pp->getMycheckbits());
+        case 0: return long2string(pp->getSeq_num());
+        case 1: return long2string(pp->getFrame_type());
+        case 2: return oppstring2string(pp->getMsg_payload());
+        case 3: return long2string(pp->getN_ack_value());
+        case 4: return long2string(pp->getMycheckbits());
         default: return "";
     }
 }
 
-void CustomizedMsgDescriptor::setFieldValueAsString(omnetpp::any_ptr object, int field, int i, const char *value) const
+bool CustomizedMsgDescriptor::setFieldValueAsString(void *object, int field, int i, const char *value) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount()){
-            base->setFieldValueAsString(object, field, i, value);
-            return;
-        }
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->setFieldValueAsString(object,field,i,value);
+        field -= basedesc->getFieldCount();
     }
-    CustomizedMsg_Base *pp = omnetpp::fromAnyPtr<CustomizedMsg_Base>(object); (void)pp;
+    CustomizedMsg_Base *pp = (CustomizedMsg_Base *)object; (void)pp;
     switch (field) {
-        case FIELD_seq_num: pp->setSeq_num(string2long(value)); break;
-        case FIELD_frame_type: pp->setFrame_type(string2long(value)); break;
-        case FIELD_msg_payload: pp->setMsg_payload((value)); break;
-        case FIELD_n_ack_value: pp->setN_ack_value(string2long(value)); break;
-        case FIELD_mycheckbits: pp->setMycheckbits(string2long(value)); break;
-        default: throw omnetpp::cRuntimeError("Cannot set field %d of class 'CustomizedMsg_Base'", field);
-    }
-}
-
-omnetpp::cValue CustomizedMsgDescriptor::getFieldValue(omnetpp::any_ptr object, int field, int i) const
-{
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldValue(object,field,i);
-        field -= base->getFieldCount();
-    }
-    CustomizedMsg_Base *pp = omnetpp::fromAnyPtr<CustomizedMsg_Base>(object); (void)pp;
-    switch (field) {
-        case FIELD_seq_num: return pp->getSeq_num();
-        case FIELD_frame_type: return pp->getFrame_type();
-        case FIELD_msg_payload: return pp->getMsg_payload();
-        case FIELD_n_ack_value: return pp->getN_ack_value();
-        case FIELD_mycheckbits: return pp->getMycheckbits();
-        default: throw omnetpp::cRuntimeError("Cannot return field %d of class 'CustomizedMsg_Base' as cValue -- field index out of range?", field);
-    }
-}
-
-void CustomizedMsgDescriptor::setFieldValue(omnetpp::any_ptr object, int field, int i, const omnetpp::cValue& value) const
-{
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount()){
-            base->setFieldValue(object, field, i, value);
-            return;
-        }
-        field -= base->getFieldCount();
-    }
-    CustomizedMsg_Base *pp = omnetpp::fromAnyPtr<CustomizedMsg_Base>(object); (void)pp;
-    switch (field) {
-        case FIELD_seq_num: pp->setSeq_num(omnetpp::checked_int_cast<int>(value.intValue())); break;
-        case FIELD_frame_type: pp->setFrame_type(omnetpp::checked_int_cast<int>(value.intValue())); break;
-        case FIELD_msg_payload: pp->setMsg_payload(value.stringValue()); break;
-        case FIELD_n_ack_value: pp->setN_ack_value(omnetpp::checked_int_cast<int>(value.intValue())); break;
-        case FIELD_mycheckbits: pp->setMycheckbits(omnetpp::checked_int_cast<char>(value.intValue())); break;
-        default: throw omnetpp::cRuntimeError("Cannot set field %d of class 'CustomizedMsg_Base'", field);
+        case 0: pp->setSeq_num(string2long(value)); return true;
+        case 1: pp->setFrame_type(string2long(value)); return true;
+        case 2: pp->setMsg_payload((value)); return true;
+        case 3: pp->setN_ack_value(string2long(value)); return true;
+        case 4: pp->setMycheckbits(string2long(value)); return true;
+        default: return false;
     }
 }
 
 const char *CustomizedMsgDescriptor::getFieldStructName(int field) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldStructName(field);
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldStructName(field);
+        field -= basedesc->getFieldCount();
     }
     switch (field) {
         default: return nullptr;
     };
 }
 
-omnetpp::any_ptr CustomizedMsgDescriptor::getFieldStructValuePointer(omnetpp::any_ptr object, int field, int i) const
+void *CustomizedMsgDescriptor::getFieldStructValuePointer(void *object, int field, int i) const
 {
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount())
-            return base->getFieldStructValuePointer(object, field, i);
-        field -= base->getFieldCount();
+    omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount())
+            return basedesc->getFieldStructValuePointer(object, field, i);
+        field -= basedesc->getFieldCount();
     }
-    CustomizedMsg_Base *pp = omnetpp::fromAnyPtr<CustomizedMsg_Base>(object); (void)pp;
+    CustomizedMsg_Base *pp = (CustomizedMsg_Base *)object; (void)pp;
     switch (field) {
-        default: return omnetpp::any_ptr(nullptr);
+        default: return nullptr;
     }
 }
 
-void CustomizedMsgDescriptor::setFieldStructValuePointer(omnetpp::any_ptr object, int field, int i, omnetpp::any_ptr ptr) const
-{
-    omnetpp::cClassDescriptor *base = getBaseClassDescriptor();
-    if (base) {
-        if (field < base->getFieldCount()){
-            base->setFieldStructValuePointer(object, field, i, ptr);
-            return;
-        }
-        field -= base->getFieldCount();
-    }
-    CustomizedMsg_Base *pp = omnetpp::fromAnyPtr<CustomizedMsg_Base>(object); (void)pp;
-    switch (field) {
-        default: throw omnetpp::cRuntimeError("Cannot set field %d of class 'CustomizedMsg_Base'", field);
-    }
-}
-
-namespace omnetpp {
-
-}  // namespace omnetpp
 
