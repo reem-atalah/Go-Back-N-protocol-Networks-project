@@ -22,9 +22,10 @@ void Hub::initialize()
 {
     // TODO - Generated method body
 //    getParentModule()->par("n");
-    CustomizedMsg_Base * msgc= new CustomizedMsg_Base("Hello from Hub");
+//    CustomizedMsg_Base * msgc= new CustomizedMsg_Base("Hello from Hub");
     EV<<"Begin hub"<<endl;
-    send(msgc, "portOut");
+    seq_num=0;
+//    send(msgc, "portOut");
 }
 
 void Hub::handleMessage(cMessage *msg)
@@ -32,40 +33,51 @@ void Hub::handleMessage(cMessage *msg)
     // TODO - Generated method body
 
     CustomizedMsg_Base * receivedMsg = check_and_cast<CustomizedMsg_Base *>(msg);
-        EV<<"received: seq_num: "<<receivedMsg->getSeq_num()
-                <<" payload: "<<receivedMsg->getMsg_payload()
-                <<" parity: "<< receivedMsg->getMycheckbits();
 
-        send(receivedMsg, "portOut");
-    EV<<msg->getName()<<endl;
-//     cancelAndDelete(msg);
+//    if(receivedMsg->getSeq_num() == seq_num)
+//    {
+        char parity_hat= checkParity((char*)receivedMsg->getMsg_payload());
+            if (parity_hat==receivedMsg->getMycheckbits()){
+                EV<<"parity check passed"<<endl;
+                // send ack
+                receivedMsg-> setN_ack_value(receivedMsg->getSeq_num());
+                receivedMsg -> setFrame_type(1);
+            }
+            else{
+                EV<<"parity check failed"<<endl;
+                // send nack
+                receivedMsg-> setN_ack_value(receivedMsg->getSeq_num());
+                receivedMsg -> setFrame_type(2);
+            }
 
-    char parity_hat= addParity((char*)receivedMsg->getMsg_payload());
-    if (parity_hat==receivedMsg->getMycheckbits()){
-        EV<<"parity check passed"<<endl;
-        // send ack
-        receivedMsg-> setN_ack_value(receivedMsg->getSeq_num());
-        receivedMsg -> setFrame_type(1);
-
-
-
-    }
-    else{
-        EV<<"parity check failed"<<endl;
-        // send nack
-        receivedMsg-> setN_ack_value(receivedMsg->getSeq_num());
-        receivedMsg -> setFrame_type(2);
-    }
-    double time = (int)getParentModule()->par("TD")+(double)getParentModule()->par("PT");
-    double prob1 = 0.9;
-    if (uniform(0, 1) > prob1){
-        sendDelayed(receivedMsg,time, "portOut");
-    }
-
+            double time = (int)getParentModule()->par("TD")+(double)getParentModule()->par("PT");
+            double prob1 = 0.1;
+            // At time[.. starting sending time after processing….. ], Node[id] Sending [ACK/NACK] with number […] , loss [Yes/No ]
+            double uniformProb= uniform(0, 1);
+        //    EV<<" uniformProb: "<<uniformProb <<endl;
+            if (uniformProb > prob1){
+        //    if(true){
+                CustomizedMsg_Base * dupreceivedMsg = receivedMsg->dup();
+                EV<<"At time: "<<simTime()
+                        <<" frame type: " <<receivedMsg->getFrame_type()
+                        <<" ack/nack value: "<< receivedMsg-> getN_ack_value()
+                        <<" loss: No"<<endl;
+                sendDelayed(dupreceivedMsg,time, "portOut");
+            }
+            else
+            {
+                bubble("message lost");
+                EV<<"At time: "<<simTime()
+                   <<" frame type: " <<receivedMsg->getFrame_type()
+                   <<" ack/nack value: "<< receivedMsg-> getN_ack_value()
+                   <<" loss: Yes"<<endl;
+            }
+//        seq_num++;
+//    }
 
 }
 
-char Hub::addParity(char * frame)
+char Hub::checkParity(char * frame)
 {
     std::bitset<8> parity(frame[0]); //fill the parity with first character
     int Size = 0;

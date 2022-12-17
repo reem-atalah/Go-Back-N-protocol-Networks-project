@@ -29,7 +29,8 @@ class Hub : public cSimpleModule
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
   public:
-    char addParity(char * frame);
+    int seq_num;
+    char checkParity(char * frame);
 };
 
 #endif

@@ -26,8 +26,8 @@ void Sender::initialize()
 {
     // TODO - Generated method body
     EV<<"Begin sender"<<endl;
-    CustomizedMsg_Base * msgc= new CustomizedMsg_Base("Sned 1st msg ..");
-    send(msgc, "portOut");
+//    CustomizedMsg_Base * msgc= new CustomizedMsg_Base("Sned 1st msg ..");
+//    send(msgc, "portOut");
     readFile("input0.txt");
     Sl = (int)getParentModule()->par("WS");
     scheduleAt(simTime() + (double)getParentModule()->par("PT"),
@@ -70,6 +70,9 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
             // Include The "T" condition ?
             char tag = msg->getName()[0];
             int property= (tag != 'T')? msgs[Sn].first: 0; //get it from the file
+            if(tag == 'T'){
+                EV<<"Timeout on: "<< sendMsgInit->getSeq_num()<<endl;
+            }
 
             switch (property)
             {
@@ -154,7 +157,7 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
             EV<<"At time: "<<time
                                 <<" Node: "<<0 //it's sender //need to be changed
                                 <<" sent frame with seq_num= "<<Sn
-                                << "property" << property
+                                <<" property: " << property
                                 <<" and payload= "<< thePayload
                                 <<" and trailer= "<<parity
                                 <<", Modified bit number " << modified
@@ -186,11 +189,18 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
     }
     else {
         CustomizedMsg_Base * receivedMsg = check_and_cast<CustomizedMsg_Base *>(msg);
+        EV<<"At time: "<< simTime()
+                <<" frame type: " <<receivedMsg->getFrame_type()
+                <<" sequence number: "<<receivedMsg->getN_ack_value()<<endl;
 
         // update ack array
         if(receivedMsg->getFrame_type() == 1)//ack
         {
+            EV<<"Before shift.."
+                    <<"Sl: "<<Sl<<endl;
             acks[receivedMsg->getN_ack_value()-Sf]=1;
+            EV<<"After shift.."
+                    <<"Sl: "<<Sl<<endl;
             int shift=applyShift(acks);
             Sl +=shift;
             Sf +=shift;
