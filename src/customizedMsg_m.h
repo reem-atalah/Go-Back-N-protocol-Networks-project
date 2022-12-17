@@ -86,6 +86,7 @@ class CustomizedMsg_Base : public ::omnetpp::cPacket
     virtual ~CustomizedMsg_Base();
     virtual CustomizedMsg_Base *dup() const override {
         //throw omnetpp::cRuntimeError("You forgot to manually add a dup() function to class CustomizedMsg");
+
         return new CustomizedMsg_Base(*this);
     }
     virtual void parsimPack(omnetpp::cCommBuffer *b) const override;
