@@ -37,10 +37,17 @@ void Sender::initialize()
                         scheduleAt(simTime() + (double)getParentModule()->par("PT")
                         + (double)getParentModule()->par("DD"),
                         new cMessage(("D" + std::to_string(0)).c_str()));
+
+    acks = std::vector<bool> (Sl, false);
 }
 
 void Sender::handleMessage(cMessage *msg) //msg is ack/nack
 {
+    for(int i = 0; i < acks.size(); i++)
+        EV << acks[i] << " ";
+        EV << endl;
+        EV << Sf << " "  << Sn << " " << Sl << endl;
+
 
     if(msg->isSelfMessage()){
         std::string self_msg = msg->getName();
@@ -196,15 +203,11 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
         // update ack array
         if(receivedMsg->getFrame_type() == 1)//ack
         {
-            EV<<"Before shift.."
-                    <<"Sl: "<<Sl<<endl;
-//            acks[receivedMsg->getN_ack_value()-Sf]=1;
+            acks[receivedMsg->getN_ack_value() - Sf]=1;
 
-//            int shift=applyShift(acks);
-//            Sl +=shift;
-//            EV<<"After shift.."
-//                <<"Sl: "<<Sl<<endl;
-//            Sf +=shift;
+            int shift=applyShift(acks);
+            Sl +=shift;
+            Sf +=shift;
         }
         // n-ack
         else if (receivedMsg->getFrame_type() == 2)
