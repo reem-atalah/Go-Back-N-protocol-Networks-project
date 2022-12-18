@@ -198,12 +198,13 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
         {
             EV<<"Before shift.."
                     <<"Sl: "<<Sl<<endl;
-            acks[receivedMsg->getN_ack_value()-Sf]=1;
-            EV<<"After shift.."
-                    <<"Sl: "<<Sl<<endl;
-            int shift=applyShift(acks);
-            Sl +=shift;
-            Sf +=shift;
+//            acks[receivedMsg->getN_ack_value()-Sf]=1;
+
+//            int shift=applyShift(acks);
+//            Sl +=shift;
+//            EV<<"After shift.."
+//                <<"Sl: "<<Sl<<endl;
+//            Sf +=shift;
         }
         // n-ack
         else if (receivedMsg->getFrame_type() == 2)

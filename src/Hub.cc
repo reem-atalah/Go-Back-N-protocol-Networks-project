@@ -62,6 +62,7 @@ void Hub::handleMessage(cMessage *msg)
                         <<" frame type: " <<receivedMsg->getFrame_type()
                         <<" ack/nack value: "<< receivedMsg-> getN_ack_value()
                         <<" loss: No"<<endl;
+//                send(dupreceivedMsg, "portOut");
                 sendDelayed(dupreceivedMsg,time, "portOut");
             }
             else
