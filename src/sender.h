@@ -20,6 +20,7 @@
 #include <bitset>
 #include <vector>
 #include <fstream>
+#include <unordered_map>
 
 using namespace omnetpp;
 
@@ -31,6 +32,7 @@ class Sender : public cSimpleModule
 public:
     std::vector<std::pair<int, std::string>> msgs;
     std::vector<bool> acks;
+    std::unordered_map<int, cMessage *> timeouts;
     char * framing(std::string msg, char flag, char escape);
     char addParity(char * frame);
     void readFile(std::string filename);

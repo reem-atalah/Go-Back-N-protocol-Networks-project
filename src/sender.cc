@@ -79,6 +79,11 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
             int property= (tag != 'T')? msgs[Sn].first: 0; //get it from the file
             if(tag == 'T'){
                 EV<<"Timeout on: "<< sendMsgInit->getSeq_num()<<endl;
+                for(int i = Sn+1; i < Sl; i++)
+                {
+                    if (timeouts[i])
+                        cancelEvent(timeouts[i]);
+                }
             }
 
             switch (property)
@@ -188,9 +193,11 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
                     new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
 
             }
+            cMessage * timeoutMsg = new cMessage(("T" + std::to_string(Sn)).c_str());
             scheduleAt(simTime() + (double)getParentModule()->par("PT")
             + (int)getParentModule()->par("TO"),
-            new cMessage(("T" + std::to_string(Sn)).c_str()));
+            timeoutMsg);
+            timeouts[Sn] = timeoutMsg;
         }
 
     }
@@ -203,11 +210,25 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
         // update ack array
         if(receivedMsg->getFrame_type() == 1)//ack
         {
-            acks[receivedMsg->getN_ack_value() - Sf]=1;
-
+            int recived_Sn = receivedMsg->getN_ack_value();
+            acks[recived_Sn - Sf] = 1;
+            if (timeouts[recived_Sn])
+                cancelEvent(timeouts[recived_Sn]);
             int shift=applyShift(acks);
+            if (shift && Sn + 1 == Sl && Sn + 1 < msgs.size())
+            {
+                scheduleAt(simTime() + (double)getParentModule()->par("PT"),
+                    new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
+
+                    int property = msgs[Sn + 1].first;
+                    if (property == 2 or property == 3 or property == 10 or property == 11)
+                        scheduleAt(simTime() + (double)getParentModule()->par("PT")
+                        + (double)getParentModule()->par("DD"),
+                       new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
+            }
             Sl +=shift;
             Sf +=shift;
+
         }
         // n-ack
         else if (receivedMsg->getFrame_type() == 2)
