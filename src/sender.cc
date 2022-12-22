@@ -151,22 +151,38 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
                 time = (int)getParentModule()->par("TD")+(int)getParentModule()->par("ED");
                 delay = (int)getParentModule()->par("ED") ; // not sure ?????????????
                 break;
-            case 12: //loss
+            case 12: //loss and modify
+                modified = 1;
+                thePayload = sendMsg->getMsg_payload();
+                thePayload[1]+=5;
+                sendMsg->setMsg_payload(thePayload.c_str());
                 loss = "Yes";
                 break;
             case 13: //loss
+                modified = 1;
+                thePayload = sendMsg->getMsg_payload();
+                thePayload[1]+=5;
+                sendMsg->setMsg_payload(thePayload.c_str());
                 loss = "Yes";
                 break;
             case 14: //loss
+                modified = 1;
+                thePayload = sendMsg->getMsg_payload();
+                thePayload[1]+=5;
+                sendMsg->setMsg_payload(thePayload.c_str());
                 loss = "Yes";
                 break;
             case 15: //loss
+                modified = 1;
+                thePayload = sendMsg->getMsg_payload();
+                thePayload[1]+=5;
+                sendMsg->setMsg_payload(thePayload.c_str());
                 loss = "Yes";
                 break;
             }
 
             // TODO: make it time + simtime()
-            EV<<"At time: "<<time
+            EV<<"At time: "<<simTime()
                                 <<" Node: "<<0 //it's sender //need to be changed
                                 <<" sent frame with seq_num= "<<Sn
                                 <<" property: " << property
@@ -190,14 +206,18 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
                 if (property == 2 or property == 3 or property == 10 or property == 11)
                     scheduleAt(simTime() + (double)getParentModule()->par("PT")
                     + (double)getParentModule()->par("DD"),
-                    new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
+                    new cMessage(("D" + std::to_string(Sn + 1)).c_str()));
 
             }
-            cMessage * timeoutMsg = new cMessage(("T" + std::to_string(Sn)).c_str());
-            scheduleAt(simTime() + (double)getParentModule()->par("PT")
-            + (int)getParentModule()->par("TO"),
-            timeoutMsg);
-            timeouts[Sn] = timeoutMsg;
+            if(tag != 'D')
+            {
+                cMessage * timeoutMsg = new cMessage(("T" + std::to_string(Sn)).c_str());
+                scheduleAt(simTime() + (double)getParentModule()->par("PT")
+                + (int)getParentModule()->par("TO"),
+                timeoutMsg);
+                timeouts[Sn] = timeoutMsg;
+            }
+
         }
 
     }
@@ -231,13 +251,16 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
 
         }
         // n-ack
-        else if (receivedMsg->getFrame_type() == 2)
-        {
-            //resend from this frame until window size
-            scheduleAt(simTime() + (double)getParentModule()->par("PT"),
-            new cMessage(("T" + std::to_string(receivedMsg->getN_ack_value())).c_str()));
-        }
-        // schdule ( like Timeout but only with PT)
+//        else if (receivedMsg->getFrame_type() == 2)
+//        {
+            //re-send from this frame until window size
+//            int recived_Sn = receivedMsg->getN_ack_value();
+//            if (timeouts[recived_Sn])
+//                cancelEvent(timeouts[recived_Sn]);
+//            scheduleAt(simTime() + (double)getParentModule()->par("PT"),
+//            new cMessage(("T" + std::to_string(receivedMsg->getN_ack_value())).c_str()));
+//        }
+        // schedule ( like Timeout but only with PT)
 
     }
 

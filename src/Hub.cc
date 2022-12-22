@@ -34,14 +34,15 @@ void Hub::handleMessage(cMessage *msg)
 
     CustomizedMsg_Base * receivedMsg = check_and_cast<CustomizedMsg_Base *>(msg);
 
-//    if(receivedMsg->getSeq_num() == seq_num)
-//    {
+    if(receivedMsg->getSeq_num() == seq_num)
+    {
         char parity_hat= checkParity((char*)receivedMsg->getMsg_payload());
             if (parity_hat==receivedMsg->getMycheckbits()){
                 EV<<"parity check passed"<<endl;
                 // send ack
                 receivedMsg-> setN_ack_value(receivedMsg->getSeq_num());
                 receivedMsg -> setFrame_type(1);
+                seq_num++;
             }
             else{
                 EV<<"parity check failed"<<endl;
@@ -51,18 +52,17 @@ void Hub::handleMessage(cMessage *msg)
             }
 
             double time = (int)getParentModule()->par("TD")+(double)getParentModule()->par("PT");
-            double prob1 = 0.1;
+//            double prob1 = 0.1;
             // At time[.. starting sending time after processing….. ], Node[id] Sending [ACK/NACK] with number […] , loss [Yes/No ]
             double uniformProb= uniform(0, 1);
         //    EV<<" uniformProb: "<<uniformProb <<endl;
-            if (uniformProb > prob1){
+            if (uniformProb > (double)getParentModule()->par("LP")){
         //    if(true){
                 CustomizedMsg_Base * dupreceivedMsg = receivedMsg->dup();
                 EV<<"At time: "<<simTime()
                         <<" frame type: " <<receivedMsg->getFrame_type()
                         <<" ack/nack value: "<< receivedMsg-> getN_ack_value()
                         <<" loss: No"<<endl;
-//                send(dupreceivedMsg, "portOut");
                 sendDelayed(dupreceivedMsg,time, "portOut");
             }
             else
@@ -73,9 +73,8 @@ void Hub::handleMessage(cMessage *msg)
                    <<" ack/nack value: "<< receivedMsg-> getN_ack_value()
                    <<" loss: Yes"<<endl;
             }
-//        seq_num++;
-//    }
-
+    }
+    EV<<"seq_num: "<<seq_num<<endl;
 }
 
 char Hub::checkParity(char * frame)

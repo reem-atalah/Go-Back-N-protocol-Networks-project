@@ -7,12 +7,13 @@ package project;
 network Network
 {
     parameters:
-        int WS = default(5);
+        int WS = default(4);
         int TO = default(10);
         double PT = default(0.5);
         int TD = default(1);
         int ED = default(4);
         double DD = default(0.1);
+        double LP = default(0.1);
 //    @display("bgb=570,327");
     submodules:
         sender: Sender {
