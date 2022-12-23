@@ -1,0 +1,1 @@
+-O3 -DNDEBUG=1 -ffp-contract=off   -MMD -MP -MF .d  -fPIC  -fno-omit-frame-pointer -DHAVE_SWAPCONTEXT -DWITH_QTENV -DWITH_NETBUILDER -DWITH_OSG -DOMNETPPLIBS_IMPORT   -I/home/mnabail/college/Networks/omnet/omnetpp-6.0.1-linux-x86_64/omnetpp-6.0.1/include

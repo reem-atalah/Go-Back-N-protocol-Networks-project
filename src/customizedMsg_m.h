@@ -72,21 +72,17 @@ class CustomizedMsg_Base : public ::omnetpp::cPacket
   private:
     void copy(const CustomizedMsg_Base& other);
 
-  protected:
+  public:
     bool operator==(const CustomizedMsg_Base&) = delete;
     // make constructors protected to avoid instantiation
-
+    CustomizedMsg_Base(const char *name=nullptr, short kind=0);
     CustomizedMsg_Base(const CustomizedMsg_Base& other);
     // make assignment operator protected to force the user override it
     CustomizedMsg_Base& operator=(const CustomizedMsg_Base& other);
 
-  public:
-    CustomizedMsg_Base(const char *name=nullptr, short kind=0);
+ // public:
     virtual ~CustomizedMsg_Base();
-    virtual CustomizedMsg_Base *dup() const override {
-//        throw omnetpp::cRuntimeError("You forgot to manually add a dup() function to class CustomizedMsg");
-        return new CustomizedMsg_Base(*this);
-    }
+    virtual CustomizedMsg_Base *dup() const override {throw omnetpp::cRuntimeError("You forgot to manually add a dup() function to class CustomizedMsg");}
     virtual void parsimPack(omnetpp::cCommBuffer *b) const override;
     virtual void parsimUnpack(omnetpp::cCommBuffer *b) override;
 
