@@ -32,7 +32,7 @@ class Sender : public cSimpleModule
 public:
     std::vector<std::pair<int, std::string>> msgs;
     std::vector<bool> acks;
-    std::unordered_map<int, cMessage *> timeouts;
+    std::unordered_map<int, std::pair<cMessage *, cMessage *>> timeouts;
     char * framing(std::string msg, char flag, char escape);
     char addParity(char * frame);
     void readFile(std::string filename);

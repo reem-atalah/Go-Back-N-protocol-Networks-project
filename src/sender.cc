@@ -77,12 +77,21 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
             // Include The "T" condition ?
             char tag = msg->getName()[0];
             int property= (tag != 'T')? msgs[Sn].first: 0; //get it from the file
+            if(tag == 'E')
+            {
+                EV << "Time out event at time [" << simTime() << "], at Node [0] for frame with seq_num=["
+                   << Sn << "]" << endl;
+                return;
+            }
             if(tag == 'T'){
                 EV<<"Timeout on: "<< sendMsgInit->getSeq_num()<<endl;
                 for(int i = Sn+1; i < Sl; i++)
                 {
-                    if (timeouts[i])
-                        cancelEvent(timeouts[i]);
+                    if (timeouts[i].first)
+                    {
+                        cancelEvent(timeouts[i].first);
+                        cancelEvent(timeouts[i].second);
+                    }
                 }
             }
 
@@ -181,11 +190,11 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
                 break;
             }
 
-            // TODO: make it time + simtime()
             EV<<"At time: "<<simTime()
                                 <<" Node: "<<0 //it's sender //need to be changed
                                 <<" sent frame with seq_num= "<<Sn
                                 <<" property: " << property
+                                <<" tag: " << tag
                                 <<" and payload= "<< thePayload
                                 <<" and trailer= "<<parity
                                 <<", Modified bit number " << modified
@@ -211,11 +220,18 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
             }
             if(tag != 'D')
             {
+                cMessage * timeoutEvent = new cMessage(("E" + std::to_string(Sn)).c_str());
+
+                scheduleAt(simTime() + (int)getParentModule()->par("TO"),
+                                timeoutEvent);
+
                 cMessage * timeoutMsg = new cMessage(("T" + std::to_string(Sn)).c_str());
+
                 scheduleAt(simTime() + (double)getParentModule()->par("PT")
                 + (int)getParentModule()->par("TO"),
                 timeoutMsg);
-                timeouts[Sn] = timeoutMsg;
+
+                timeouts[Sn] = std::make_pair(timeoutEvent, timeoutMsg);
             }
 
         }
@@ -232,8 +248,11 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
         {
             int recived_Sn = receivedMsg->getN_ack_value();
             acks[recived_Sn - Sf] = 1;
-            if (timeouts[recived_Sn])
-                cancelEvent(timeouts[recived_Sn]);
+            if (timeouts[recived_Sn].first)
+            {
+                cancelEvent(timeouts[recived_Sn].first);
+                cancelEvent(timeouts[recived_Sn].second);
+            }
             int shift=applyShift(acks);
             if (shift && Sn + 1 == Sl && Sn + 1 < msgs.size())
             {
@@ -244,7 +263,7 @@ void Sender::handleMessage(cMessage *msg) //msg is ack/nack
                     if (property == 2 or property == 3 or property == 10 or property == 11)
                         scheduleAt(simTime() + (double)getParentModule()->par("PT")
                         + (double)getParentModule()->par("DD"),
-                       new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
+                       new cMessage(("D" + std::to_string(Sn + 1)).c_str()));
             }
             Sl +=shift;
             Sf +=shift;
@@ -319,6 +338,10 @@ void Sender::readFile(std::string filename)
           msgs.push_back(std::make_pair(errors, msg));
         }
       }
+      for(int i = 0; i < msgs.size(); i++)
+          {
+              EV << i << " " << msgs[i].first << " " << msgs[i].second << endl;
+          }
 }
 
 int Sender::applyShift(std::vector<bool>& ack) {
