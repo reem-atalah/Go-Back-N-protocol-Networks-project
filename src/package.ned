@@ -29,8 +29,8 @@ network Network
         // sender is the NODE
         // hub is the coordinaor
         // sender.portOut --> hub.portIn;
-        hub.portOut++ --> sender[0].fromCoordinator;
-        hub.portOut++ --> sender[1].fromCoordinator;
+        hub.portOut++ --> node_0.fromCoordinator;
+        hub.portOut++ --> node_1.fromCoordinator;
         node_0.toNode --> node_1.fromNode;
         node_1.toNode --> node_0.fromNode;
 }
