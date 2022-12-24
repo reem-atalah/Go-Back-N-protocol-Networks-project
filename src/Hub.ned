@@ -26,6 +26,6 @@ simple Hub
 //        volatile int m = int(uniform(0,parent.n));
     gates:
         input portIn @loose;
-        output portOut[] @loose;
+        output portOut[] ;
         // output portOut_2 @loose;
 }

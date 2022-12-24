@@ -58,7 +58,7 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
             // init sender
 
             // TODO - Generated method body
-            EV << "Begin sender" << endl;
+            EV << "Begin sender, I know Who i am now" << endl;
             // CustomizedMsg_Base * msgc= new CustomizedMsg_Base("Sned 1st msg ..");
             // send(msgc, "portOut");
             readFile("input0.txt");
@@ -78,7 +78,7 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
             isFirstMessageFromCoordinator = 2;
             // init receiver
             seq_num = 0;
-            EV << "Begin receiver" << endl;
+            EV << "Begin receiver, I know who i am now" << endl;
         }
     }
     if (isFirstMessageFromCoordinator == 2) //receiver

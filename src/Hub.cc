@@ -24,6 +24,7 @@ void Hub::initialize()
     cMessage *msg = new cMessage("kak");
     // send it to the sender
     send(msg, "portOut",1);
+    EV<<"COORDINATOR sent message to sender, let roll baby";
 }
 
 void Hub::handleMessage(cMessage *msg)
