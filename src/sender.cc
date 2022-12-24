@@ -44,6 +44,11 @@ void Sender::initialize()
 
 void Sender::handleMessage(cMessage *msg) // msg is ack/nack
 {
+    // open txt file
+    std:: ofstream myfile("output.txt", std::ios_base::app);
+
+
+
     // message from hub (hub will be now the coordinator)
     if (isFirstMessageFromCoordinator == 0)
     {
@@ -71,6 +76,13 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
                << "] , Introducing channel error with code =[" <<
                (property & 8) << (property & 4) << (property & 2) << (property & 1)
                << "]" << endl;
+
+            myfile << "At [" << simTime()
+               << "] , Node [" << (int)getParentModule()->par("SenderNodeIndex")
+               << "] , Introducing channel error with code =[" <<
+               (property & 8) << (property & 4) << (property & 2) << (property & 1)
+               << "]" << endl;
+
             if (property == 2 or property == 3 or property == 10 or property == 11)
                 scheduleAt(simTime() + (double)getParentModule()->par("PT") + (double)getParentModule()->par("DD"),
                            new cMessage(("D" + std::to_string(0)).c_str()));
@@ -114,6 +126,11 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
             double uniformProb = uniform(0, 1);
             //    EV<<" uniformProb: "<<uniformProb <<endl;
             EV << "At time [" << simTime() + (double)getParentModule()->par("PT")
+               << "], Node [" << 1 - (int)getParentModule()->par("SenderNodeIndex")
+               << "] Sending [" << (parity_hat == receivedMsg->getMycheckbits()? "ACK" : "NACK")
+               << "] with number [" << ((receivedMsg->getN_ack_value() + 1) % (int)getParentModule()->par("WS"))
+               << "], loss [" << (uniformProb > (double)getParentModule()->par("LP")? "No" : "Yes") << "]" << endl;
+            myfile << "At time [" << simTime() + (double)getParentModule()->par("PT")
                << "], Node [" << 1 - (int)getParentModule()->par("SenderNodeIndex")
                << "] Sending [" << (parity_hat == receivedMsg->getMycheckbits()? "ACK" : "NACK")
                << "] with number [" << ((receivedMsg->getN_ack_value() + 1) % (int)getParentModule()->par("WS"))
@@ -173,6 +190,10 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
                 if(tag == 'E')
                 {
                     EV << "Time out event at time [" << simTime()
+                       << "], at Node ["<< (int)getParentModule()->par("SenderNodeIndex")
+                       <<"] for frame with seq_num=["
+                       << (Sn % (int)getParentModule()->par("WS")) << "]" << endl;
+                    myfile << "Time out event at time [" << simTime()
                        << "], at Node ["<< (int)getParentModule()->par("SenderNodeIndex")
                        <<"] for frame with seq_num=["
                        << (Sn % (int)getParentModule()->par("WS")) << "]" << endl;
@@ -296,6 +317,16 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
                    << "], Duplicate [" << duplicate // not handled yet
                    << "], Delay [" << delay
                    << "]" << endl;
+                myfile << "At time [" << simTime()
+                   << "], Node [" << (int)getParentModule()->par("SenderNodeIndex")
+                   << "], [sent] frame with seq_num=[" << (Sn % (int)getParentModule()->par("WS"))
+                   << "] and payload=[" << thePayload
+                   << "] and trailer= [" << parity
+                   << "], Modified [" << modified
+                   << "], Lost [" << loss
+                   << "], Duplicate [" << duplicate // not handled yet
+                   << "], Delay [" << delay
+                   << "]" << endl;
                 if (time > 0.001)
                     sendDelayed(sendMsg, time, "toNode");
 
@@ -307,6 +338,11 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
                                new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
 
                     EV << "At [" << simTime()
+                       << "], Node [" << (int)getParentModule()->par("SenderNodeIndex")
+                       << "], Introducing channel error with code =[" <<
+                       (property & 8) << (property & 4) << (property & 2) << (property & 1)
+                       << "]" << endl;
+                    myfile << "At [" << simTime()
                        << "], Node [" << (int)getParentModule()->par("SenderNodeIndex")
                        << "], Introducing channel error with code =[" <<
                        (property & 8) << (property & 4) << (property & 2) << (property & 1)
@@ -373,6 +409,7 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
             // schedule ( like Timeout but only with PT)
         }
     }
+    myfile.close();
 }
 
 char *Sender::framing(std::string msg, char flag, char escape)
