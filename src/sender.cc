@@ -74,13 +74,13 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
             EV << "At [" << simTime()
                << "] , Node [" << (int)getParentModule()->par("SenderNodeIndex")
                << "] , Introducing channel error with code =[" <<
-               (property & 8) << (property & 4) << (property & 2) << (property & 1)
+               ((property & 8 )/ 8) << ((property & 4 )/ 4) << ((property & 2 )/ 2) << (property & 1)
                << "]" << endl;
 
             myfile << "At [" << simTime()
                << "] , Node [" << (int)getParentModule()->par("SenderNodeIndex")
                << "] , Introducing channel error with code =[" <<
-               (property & 8) << (property & 4) << (property & 2) << (property & 1)
+               ((property & 8 )/ 8) << ((property & 4 )/ 4) << ((property & 2)/ 2) << (property & 1)
                << "]" << endl;
 
             if (property == 2 or property == 3 or property == 10 or property == 11)
@@ -340,12 +340,12 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
                     EV << "At [" << simTime()
                        << "], Node [" << (int)getParentModule()->par("SenderNodeIndex")
                        << "], Introducing channel error with code =[" <<
-                       (property & 8) << (property & 4) << (property & 2) << (property & 1)
+                       ((property & 8 )/ 8) << ((property & 4 )/ 4) << ((property & 2) / 2) << (property & 1)
                        << "]" << endl;
                     myfile << "At [" << simTime()
                        << "], Node [" << (int)getParentModule()->par("SenderNodeIndex")
                        << "], Introducing channel error with code =[" <<
-                       (property & 8) << (property & 4) << (property & 2) << (property & 1)
+                       ((property & 8 )/ 8) << ((property & 4 )/ 4) << ((property & 2) / 2) << (property & 1)
                        << "]" << endl;
 
                     if (property == 2 or property == 3 or property == 10 or property == 11)
@@ -387,8 +387,18 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
                 {
                     scheduleAt(simTime() + (double)getParentModule()->par("PT"),
                                new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
-
                     int property = msgs[Sn + 1].first;
+                    EV << "At [" << simTime()
+                       << "] , Node [" << (int)getParentModule()->par("SenderNodeIndex")
+                       << "] , Introducing channel error with code =[" <<
+                       ((property & 8 )/ 8) << ((property & 4 )/ 4) << ((property & 2 )/ 2) << (property & 1)
+                       << "]" << endl;
+
+                    myfile << "At [" << simTime()
+                       << "] , Node [" << (int)getParentModule()->par("SenderNodeIndex")
+                       << "] , Introducing channel error with code =[" <<
+                       ((property & 8 )/ 8) << ((property & 4 )/ 4) << ((property & 2)/ 2) << (property & 1)
+                       << "]" << endl;
                     if (property == 2 or property == 3 or property == 10 or property == 11)
                         scheduleAt(simTime() + (double)getParentModule()->par("PT") + (double)getParentModule()->par("DD"),
                                    new cMessage(("D" + std::to_string(Sn + 1)).c_str()));
