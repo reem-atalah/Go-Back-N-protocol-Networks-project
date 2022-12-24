@@ -23,7 +23,7 @@ void Hub::initialize()
     // create new cmessage
     cMessage *msg = new cMessage("kak");
     // send it to the sender
-    send(msg, "out",1);
+    send(msg, "portOut",1);
 }
 
 void Hub::handleMessage(cMessage *msg)

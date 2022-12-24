@@ -28,6 +28,9 @@ simple Sender
 
 
      gates:
-        input portIn @loose;
-        output portOut @loose;
+        input  fromCoordinator @loose;
+        input  fromNode @loose;
+        output toNode @loose;
+        // input portIn @loose;
+        // output portOut @loose;
 }
