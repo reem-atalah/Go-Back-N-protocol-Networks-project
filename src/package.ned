@@ -13,14 +13,15 @@ network Network
         int TD = default(1);
         int ED = default(4);
         double DD = default(0.1);
-        double LP = default(0.1);
-//    @display("bgb=570,327");
+        double LP = default(0.0);
+        int SenderNodeIndex = default(0);
+    //    @display("bgb=570,327");
     submodules:
         node_0: Sender {
             @display("p=201,150");
         }
         node_1: Sender {
-            @display("p=201,150");
+            @display("p=424,163");
         }
         hub: Hub {
             @display("p=345,124");

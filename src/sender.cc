@@ -58,7 +58,7 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
             // init sender
 
             // TODO - Generated method body
-            EV << "Begin sender, I know Who i am now" << endl;
+            //EV << "Begin sender, I know Who i am now" << endl;
             // CustomizedMsg_Base * msgc= new CustomizedMsg_Base("Sned 1st msg ..");
             // send(msgc, "portOut");
             readFile("input0.txt");
@@ -66,25 +66,29 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
             scheduleAt(simTime() + (double)getParentModule()->par("PT"),
                        new cMessage(("S" + std::to_string(0)).c_str()));
             int property = msgs[0].first;
+            EV << "At [" << simTime()
+               << "] , Node [" << (int)getParentModule()->par("SenderNodeIndex")
+               << "] , Introducing channel error with code =[" <<
+               (property & 8) << (property & 4) << (property & 2) << (property & 1)
+               << "]" << endl;
             if (property == 2 or property == 3 or property == 10 or property == 11)
                 scheduleAt(simTime() + (double)getParentModule()->par("PT") + (double)getParentModule()->par("DD"),
                            new cMessage(("D" + std::to_string(0)).c_str()));
 
             acks = std::vector<bool>(Sl, false);
-            isFirstMessageFromCoordinator = 0;
         }
         else
         {
             isFirstMessageFromCoordinator = 2;
             // init receiver
             seq_num = 0;
-            EV << "Begin receiver, I know who i am now" << endl;
+            //EV << "Begin receiver, I know who i am now" << endl;
         }
     }
     if (isFirstMessageFromCoordinator == 2) //receiver
     {
-        // receiver logic
 
+        // receiver logic
         CustomizedMsg_Base *receivedMsg = check_and_cast<CustomizedMsg_Base *>(msg);
 
         if (receivedMsg->getSeq_num() == seq_num)
@@ -92,7 +96,6 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
             char parity_hat = checkParity((char *)receivedMsg->getMsg_payload());
             if (parity_hat == receivedMsg->getMycheckbits())
             {
-                EV << "parity check passed" << endl;
                 // send ack
                 receivedMsg->setN_ack_value(receivedMsg->getSeq_num());
                 receivedMsg->setFrame_type(1);
@@ -100,7 +103,6 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
             }
             else
             {
-                EV << "parity check failed" << endl;
                 // send nack
                 receivedMsg->setN_ack_value(receivedMsg->getSeq_num());
                 receivedMsg->setFrame_type(2);
@@ -108,40 +110,36 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
 
             double time = (int)getParentModule()->par("TD") + (double)getParentModule()->par("PT");
             //            double prob1 = 0.1;
-            // At time[.. starting sending time after processing�.. ], Node[id] Sending [ACK/NACK] with number [�] , loss [Yes/No ]
+            // At time[.. starting sending time after processing.. ], Node[id] Sending [ACK/NACK] with number [] , loss [Yes/No ]
             double uniformProb = uniform(0, 1);
             //    EV<<" uniformProb: "<<uniformProb <<endl;
+            EV << "At time [" << simTime() + (double)getParentModule()->par("PT")
+               << "], Node [" << 1 - (int)getParentModule()->par("SenderNodeIndex")
+               << "] Sending [" << (parity_hat == receivedMsg->getMycheckbits()? "ACK" : "NACK")
+               << "] with number [" << ((receivedMsg->getN_ack_value() + 1) % (int)getParentModule()->par("WS"))
+               << "], loss [" << (uniformProb > (double)getParentModule()->par("LP")? "No" : "Yes") << "]" << endl;
             if (uniformProb > (double)getParentModule()->par("LP"))
             {
                 //    if(true){
                 CustomizedMsg_Base *dupreceivedMsg = receivedMsg->dup();
-                EV << "At time: " << simTime()
-                   << " frame type: " << receivedMsg->getFrame_type()
-                   << " ack/nack value: " << receivedMsg->getN_ack_value()
-                   << " loss: No" << endl;
                 sendDelayed(dupreceivedMsg, time, "toNode");
             }
             else
             {
                 bubble("message lost");
-                EV << "At time: " << simTime()
-                   << " frame type: " << receivedMsg->getFrame_type()
-                   << " ack/nack value: " << receivedMsg->getN_ack_value()
-                   << " loss: Yes" << endl;
             }
         }
-        EV << "seq_num: " << seq_num << endl;
     }
     else if (isFirstMessageFromCoordinator == 1)
     {
         // sender logic
 
-        for (int i = 0; i < acks.size(); i++)
-        {
-            EV << acks[i] << " ";
-        }
-        EV << endl;
-        EV << Sf << " " << Sn << " " << Sl << endl;
+//        for (int i = 0; i < acks.size(); i++)
+//        {
+//            EV << acks[i] << " ";
+//        }
+//        EV << endl;
+//        EV << Sf << " " << Sn << " " << Sl << endl;
 
         if (msg->isSelfMessage())
         {
@@ -172,13 +170,23 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
                 // Include The "T" condition ?
                 char tag = msg->getName()[0];
                 int property = (tag != 'T') ? msgs[Sn].first : 0; // get it from the file
+                if(tag == 'E')
+                {
+                    EV << "Time out event at time [" << simTime()
+                       << "], at Node ["<< (int)getParentModule()->par("SenderNodeIndex")
+                       <<"] for frame with seq_num=["
+                       << (Sn % (int)getParentModule()->par("WS")) << "]" << endl;
+                    return;
+                }
                 if (tag == 'T')
                 {
-                    EV << "Timeout on: " << sendMsgInit->getSeq_num() << endl;
                     for (int i = Sn + 1; i < Sl; i++)
                     {
-                        if (timeouts[i])
-                            cancelEvent(timeouts[i]);
+                        if (timeouts[i].first)
+                        {
+                            cancelEvent(timeouts[i].first);
+                            cancelEvent(timeouts[i].second);
+                        }
                     }
                 }
 
@@ -278,54 +286,66 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
                 }
 
                 // TODO: make it time + simtime()
-                EV << "At time: " << simTime()
-                   << " Node: " << 0 // it's sender //need to be changed
-                   << " sent frame with seq_num= " << Sn
-                   << " property: " << property
-                   << " and payload= " << thePayload
-                   << " and trailer= " << parity
-                   << ", Modified bit number " << modified
-                   << ", Lost " << loss
-                   << ", Duplicate " << duplicate // not handled yet
-                   << ", Delay " << delay
-                   << endl;
+                EV << "At time [" << simTime()
+                   << "], Node [" << (int)getParentModule()->par("SenderNodeIndex")
+                   << "], [sent] frame with seq_num=[" << (Sn % (int)getParentModule()->par("WS"))
+                   << "] and payload=[" << thePayload
+                   << "] and trailer= [" << parity
+                   << "], Modified [" << modified
+                   << "], Lost [" << loss
+                   << "], Duplicate [" << duplicate // not handled yet
+                   << "], Delay [" << delay
+                   << "]" << endl;
                 if (time > 0.001)
                     sendDelayed(sendMsg, time, "toNode");
 
                 // take out of condition??
                 if (Sn + 1 < Sl && Sn + 1 < msgs.size() && tag != 'D')
                 {
+                    property = msgs[Sn + 1].first;
                     scheduleAt(simTime() + (double)getParentModule()->par("PT"),
                                new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
 
-                    property = msgs[Sn + 1].first;
+                    EV << "At [" << simTime()
+                       << "], Node [" << (int)getParentModule()->par("SenderNodeIndex")
+                       << "], Introducing channel error with code =[" <<
+                       (property & 8) << (property & 4) << (property & 2) << (property & 1)
+                       << "]" << endl;
+
                     if (property == 2 or property == 3 or property == 10 or property == 11)
                         scheduleAt(simTime() + (double)getParentModule()->par("PT") + (double)getParentModule()->par("DD"),
                                    new cMessage(("D" + std::to_string(Sn + 1)).c_str()));
                 }
                 if (tag != 'D')
                 {
-                    cMessage *timeoutMsg = new cMessage(("T" + std::to_string(Sn)).c_str());
-                    scheduleAt(simTime() + (double)getParentModule()->par("PT") + (int)getParentModule()->par("TO"),
-                               timeoutMsg);
-                    timeouts[Sn] = timeoutMsg;
+                    cMessage * timeoutEvent = new cMessage(("E" + std::to_string(Sn)).c_str());
+
+                    scheduleAt(simTime() + (int)getParentModule()->par("TO"),
+                                                    timeoutEvent);
+
+                    cMessage * timeoutMsg = new cMessage(("T" + std::to_string(Sn)).c_str());
+
+                    scheduleAt(simTime() + (double)getParentModule()->par("PT")
+                                    + (int)getParentModule()->par("TO"),
+                                    timeoutMsg);
+                    timeouts[Sn] = std::make_pair(timeoutEvent, timeoutMsg);
                 }
             }
         }
         else
         {
             CustomizedMsg_Base *receivedMsg = check_and_cast<CustomizedMsg_Base *>(msg);
-            EV << "At time: " << simTime()
-               << " frame type: " << receivedMsg->getFrame_type()
-               << " sequence number: " << receivedMsg->getN_ack_value() << endl;
 
             // update ack array
             if (receivedMsg->getFrame_type() == 1) // ack
             {
                 int recived_Sn = receivedMsg->getN_ack_value();
                 acks[recived_Sn - Sf] = 1;
-                if (timeouts[recived_Sn])
-                    cancelEvent(timeouts[recived_Sn]);
+                if (timeouts[recived_Sn].first)
+                            {
+                                cancelEvent(timeouts[recived_Sn].first);
+                                cancelEvent(timeouts[recived_Sn].second);
+                            }
                 int shift = applyShift(acks);
                 if (shift && Sn + 1 == Sl && Sn + 1 < msgs.size())
                 {
@@ -335,7 +355,7 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
                     int property = msgs[Sn + 1].first;
                     if (property == 2 or property == 3 or property == 10 or property == 11)
                         scheduleAt(simTime() + (double)getParentModule()->par("PT") + (double)getParentModule()->par("DD"),
-                                   new cMessage(("S" + std::to_string(Sn + 1)).c_str()));
+                                   new cMessage(("D" + std::to_string(Sn + 1)).c_str()));
                 }
                 Sl += shift;
                 Sf += shift;

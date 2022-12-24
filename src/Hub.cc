@@ -1,3 +1,4 @@
+
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +29,7 @@ void Hub::initialize()
     msg->setMsg_payload(txt.c_str());
 
     // send it to the sender
-    send(msg, "portOut",1);
+    send(msg, "portOut", (int)getParentModule()->par("SenderNodeIndex"));
     EV<<"COORDINATOR sent message to sender, let roll baby";
 }
 
