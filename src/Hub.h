@@ -17,6 +17,7 @@
 #define __LAB3_HUB_H_
 
 #include <omnetpp.h>
+#include<string>
 
 using namespace omnetpp;
 

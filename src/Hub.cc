@@ -21,7 +21,12 @@ Define_Module(Hub);
 void Hub::initialize()
 {
     // create new cmessage
-    cMessage *msg = new cMessage("kak");
+    std::string txt="kak";
+    //cMessage *msg = new cMessage("kak");
+
+    CustomizedMsg_Base *msg = new CustomizedMsg_Base();
+    msg->setMsg_payload(txt.c_str());
+
     // send it to the sender
     send(msg, "portOut",1);
     EV<<"COORDINATOR sent message to sender, let roll baby";

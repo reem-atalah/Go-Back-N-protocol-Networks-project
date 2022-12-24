@@ -49,7 +49,7 @@ void Sender::handleMessage(cMessage *msg) // msg is ack/nack
     {
         // read message , normal message not custom one
         // if message content is "kak" then it is the first message from the coordinato
-        std::string msg_content = msg->getName();
+        std::string msg_content = check_and_cast<CustomizedMsg_Base *>(msg)->getMsg_payload();
 
         if ( msg_content =="kak"  ) // if the message is from the coordinator (hub)
         {   // then we are the sender
