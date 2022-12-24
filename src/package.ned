@@ -16,7 +16,10 @@ network Network
         double LP = default(0.1);
 //    @display("bgb=570,327");
     submodules:
-        sender[2]: Sender {
+        node_0: Sender {
+            @display("p=201,150");
+        }
+        node_1: Sender {
             @display("p=201,150");
         }
         hub: Hub {
@@ -28,7 +31,7 @@ network Network
         // sender.portOut --> hub.portIn;
         hub.portOut++ --> sender[0].fromCoordinator;
         hub.portOut++ --> sender[1].fromCoordinator;
-        sender[0].toNode --> sender[1].fromNode;
-        sender[1].toNode --> sender[0].fromNode;
+        node_0.toNode --> node_1.fromNode;
+        node_1.toNode --> node_0.fromNode;
 }
 
